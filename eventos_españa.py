@@ -1,36 +1,32 @@
-#Programa que muestre segun las fechas indicadas, la sala, el lugar y los artistas que van a actuar proximamente en España.
+#Programa en python que muestra la sala, el lugar y los artistas que van a actuar proximamente en España con las fechas indicadas. 
 
-#Importamos libreria requests
+#Importamos la librería requests
 import requests
-
 #Importamos la libreria json
 import json
-
-#Importar la libreria para que pueda leer nuestra key.
+#Importamos la librería os que va leer nuestra variable de entorno
 import os
 
-#Guardaremos nuestra key en una variable de entorno.
-key=os.environ["key"]
+#Importamos las fechas
+from datetime import datetime
 
-#importamos las fechas
-from datetime import datetime 
-
-#url base
+#Guardamos la url base
 url_base="https://app.ticketmaster.com/discovery/v2/"
 
-#Ponemos el codigo en una variable 'ES'
+#Guardamos nuestra key 
+key=os.environ["apikey"]
+#Guardamos en una variable el código del país, en esta caso como queremos poner los eventos de españa pondremos 'ES'
 code='ES'
+#Vamos a crear un diccionario que guarde nuestros parámetros
+payload = {'apikey':key,'countryCode':code}
 
-#Guardamos en un diccionario nuestros payload(parametros)
-payload = {'key':key,'countryCode':code}
-
-#Guardamos en una variable 'r', una peticion en la cual añadimos los parametros
+#Guardamos en una variable la peticion, y añadimos los parametros tambien.
 r=requests.get(url_base+'venues.json',params=payload)
 
 #Función que recibe un identificador del lugar y devuelve el nombre del evento y la fecha en la que está previsto.
 
 def mostrar_artista_fecha (id_lugar):
-    parametros = {'key':key,'venueId':id_lugar}
+    parametros = {'apikey':key,'venueId':id_lugar}
     peticion=requests.get(url_base+'events',params=parametros)
     nombres=[]
     fechas=[]
@@ -42,14 +38,12 @@ def mostrar_artista_fecha (id_lugar):
         filtro=[nombres,fechas]
         return filtro
 
-
-#Para asegurarnos que no hay errores consultamos el estado de la petición.
-#Inicializamos las listas que nos hacen falta
+#Vamos a consultar el estado de la peticion para comprobar que no hay errores.
+#Inicializamos las listas necesarias.
 salas=[]
 lugares=[]
 identificadores=[]
 if r.status_code == 200:
-    #Guardamos el contenido en una variable leido por json.
     doc = r.json()
     for lugar in doc["_embedded"]["venues"]:
         salas.append(lugar["name"])
@@ -65,4 +59,4 @@ if r.status_code == 200:
             for nom,fecha in zip((mostrar_artista_fecha(ident)[0]),(mostrar_artista_fecha(ident)[1])):
                 fecha_cambiada = datetime.strptime(fecha, '%Y-%m-%d')
                 fecha_str = datetime.strftime(fecha_cambiada, '%d/%m/%Y')
-                print("- ",nom,"Fecha: ",fecha_str)   
+                print("- ",nom,"Fecha: ",fecha_str) 
