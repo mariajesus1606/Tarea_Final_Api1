@@ -1,25 +1,26 @@
 #Programa que muestre segun el código del pais todos los eventos, con el nombre del artista, la fecha, el lugar y la url para poder comprar las entradas.
 
-#Importamos libreria requests
-import requests
+#Programa en python que muestra todos los eventos segun código del pais, con el artista o los artistas, la fecha, el lugar y la url para comprar la entrada
 
+#Importamos la librería requests
+import requests
 #Importamos la libreria json
 import json
-
-#Importar la libreria para que pueda leer nuestra key.
+#Importamos la librería os que va leer nuestra variable de entorno
 import os
 
-#Guardaremos nuestra key en una variable de entorno.
-key=os.environ["key"]
+#Importamos las fechas
+from datetime import datetime
 
-#importamos las fechas
-from datetime import datetime 
-
-#url base
+#Guardamos la url base
 url_base="https://app.ticketmaster.com/discovery/v2/"
 
+#Guardamos nuestra key 
+key=os.environ["apikey"]
+
+
 #Obtener el total de páginas:
-payload = {'key':key}
+payload = {'apikey':key}
 p = requests.get(url_base+'events',params=payload)
 if p.status_code == 200:
     doc = p.json()
@@ -114,14 +115,11 @@ codigos_paises=["US (United States Of America)",
 "VE (Venezuela)"]
 
 
-
 #Función que recibe el código del país y devuelve el nombre, la sala, la dirección, la fecha y la url
 def mostrar_evento (codigo_pais,numero_pagina):
-    #Creamos el diccionario con los parámetros necesarios
-    payload = {'key':key,'countryCode':codigo_pais,'page':numero_pagina}
-    #Guardamos la petición en una variable(urlbase + diccionario con parametros)
+    payload = {'apikey':key,'countryCode':codigo_pais,'page':numero_pagina}
     r=requests.get(url_base+'events',params=payload)
-    #Inicializamos las listas necesarias
+    #Inicializamos las listas que vamos a usar
     nombres=[]
     fechas=[]
     horas=[]
@@ -132,12 +130,11 @@ def mostrar_evento (codigo_pais,numero_pagina):
     #Comprobamos que la peticion es correcta
     if r.status_code == 200:
         url_gestionada=r.url
-        #Guardamos el contenido en json
         contenido = r.json()
-        # Si el total de elementos es igual a 0 devuelve un mensaje
+        #Si el total de elementos es igual a 0 devuelve un mensaje
         total_pag=contenido["page"].get("totalElements")
         if total_pag == 0:
-            mensaje=("No hay eventos en el país indicado")
+            mensaje=("Lo siento!! No hay eventos en el país indicado")
             return mensaje
         else:
             #Añadimos la información a cada lista
@@ -145,7 +142,7 @@ def mostrar_evento (codigo_pais,numero_pagina):
                 nombres.append(elem["name"])
                 urls.append(elem["url"])
                 fechas.append(elem["dates"]["start"]["localDate"])
-                #A veces la hora no esta especificada así que nos aseguramos de ello.
+                #Comprobamos si esta la hora porque a veces no esta
                 if "localTime" in elem["dates"]["start"]:
                     horas.append(elem["dates"]["start"]["localTime"])
                 else:
@@ -162,9 +159,8 @@ def mostrar_evento (codigo_pais,numero_pagina):
 #Inicializamos las variables codigo de pais vacío y numero por defecto en 1, para que sea la primera página del contenido
 codpais=""
 num=1
-#Mientras numero de pagina sea distinto de * hacemos todo el procedimiento
+
 while num != 0:
-    #Pedimos al usuario el código del país
     if codpais == "":
         codpais=input("\nIntroduce el código del pais: ")
     else:
@@ -174,13 +170,11 @@ while num != 0:
     for i in codigos_paises:
         codigos.append(i[:2])
 
-    #Validar codigo pais
+    #Validamos codigo pais
     while codpais not in codigos:
-        print("\n¡Error!")
-        print("\n-> El Código del país no es correcto.")
-        print("\n-> El Código se compone de dos caracteres en mayúsculas")
+        print("\nError!!!Codigo del Pais Incorrecto.Intentalo de nuevo.")
         respuesta=input("\n¿Quieres ver las lista de códigos disponible?"'(s/n): ')
-        #Validar respuesta
+        #Validamos la respuesta
         if 's' not in respuesta and 'n' not in respuesta:
             print("\nPorfavor introduce s o n para responder")
             respuesta=input("\n¿Quieres ver las lista de códigos disponible?"'(s/n): ')
@@ -191,13 +185,11 @@ while num != 0:
         else:
             codpais=input("\nIntroduce el código del pais: ")
 
-    #MOSTRAR CONTENIDO
-    #Si lo que devuelve la funcion no es una lista imprime el mensaje.
+    #Si lo que devuelve la funcion no es una lista imprime el mensaje y sino, imprime el contenido.
     if type(mostrar_evento(codpais,num)) != list: 
         print(mostrar_evento(codpais,num))
         print("Programa terminado.")
         break
-    #Si no, impime el contenido
     else:
         for nombre,fecha,hora,sala,direc,ciudad,url in zip((mostrar_evento(codpais,num)[0]),(mostrar_evento(codpais,num)[1]),(mostrar_evento(codpais,num)[2]),(mostrar_evento(codpais,num)[3]),(mostrar_evento(codpais,num)[4]),(mostrar_evento(codpais,num)[5]),(mostrar_evento(codpais,num)[6])):
             fecha_cambiada = datetime.strptime(fecha, '%Y-%m-%d')
